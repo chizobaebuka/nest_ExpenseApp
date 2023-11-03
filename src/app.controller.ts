@@ -1,6 +1,7 @@
-import {Controller, Delete, Get, Post, Put, Param, Body, HttpCode} from '@nestjs/common'
+import {Controller, Delete, Get, Post, Put, Param, Body, HttpCode, ParseUUIDPipe, ParseEnumPipe} from '@nestjs/common'
 import { ReportType } from './data'
 import { AppService } from './app.service'
+import { ReportResponseDTO, createReportDTO, updateReportDTO } from './DTO/report.dto'
 
 @Controller('report/:type')
 export class AppController {
@@ -9,32 +10,32 @@ export class AppController {
   ) {}
 
   @Get('')
-  getAllReports( @Param('type') type: string) {
+  getAllReports( @Param('type', new ParseEnumPipe(ReportType)) type: string): ReportResponseDTO[] {
     const reportType = type === "income" ? ReportType.INCOME : ReportType.EXPENSE
     return this.appService.getAllReports(reportType)
   }
 
   @Get('/:id')
   getReportById(
-    @Param('type') type: string,
-    @Param('id') id: string
-    ) {
+    @Param('type', new ParseEnumPipe(ReportType)) type: string,
+    @Param('id', ParseUUIDPipe) id: string
+    ) : ReportResponseDTO {
     const reportType = type === "income" ? ReportType.INCOME : ReportType.EXPENSE
     return this.appService.getReportById(id, reportType)
   }
 
   @Post('')
-  createReport( @Body() {amount, source} :{ amount: number, source: string }, @Param('type') type: string ) {
+  createReport( @Body() {amount, source} :createReportDTO, @Param('type', new ParseEnumPipe(ReportType)) type: string ) : ReportResponseDTO {
     const reportType = type === "income" ? ReportType.INCOME : ReportType.EXPENSE
     return this.appService.createReport(reportType, {amount, source})
   }
 
   @Put(':id')
   updateReport( 
-    @Param('id') id: string, 
-    @Param('type') type: string,
-    @Body() body :{ amount: number, source: string } 
-  ) {
+    @Param('id', ParseUUIDPipe) id: string, 
+    @Param('type', new ParseEnumPipe(ReportType)) type: string,
+    @Body() body :updateReportDTO 
+  ) : ReportResponseDTO {
     const reportType = type === "income" ? ReportType.INCOME : ReportType.EXPENSE
     return this.appService.updateReport(id, reportType, body)
   }
@@ -42,7 +43,7 @@ export class AppController {
   @HttpCode(204)
   @Delete(':id')
   deleteReport (
-    @Param('id') id: string
+    @Param('id', ParseUUIDPipe) id: string
   ) {
     this.appService.deleteReport(id)
   }
